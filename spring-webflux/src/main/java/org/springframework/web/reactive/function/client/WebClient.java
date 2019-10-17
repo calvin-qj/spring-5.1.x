@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
 import org.reactivestreams.Publisher;
@@ -303,11 +304,6 @@ public interface WebClient {
 		Builder exchangeFunction(ExchangeFunction exchangeFunction);
 
 		/**
-		 * Clone this {@code WebClient.Builder}.
-		 */
-		Builder clone();
-
-		/**
 		 * Apply the given {@code Consumer} to this builder instance.
 		 * <p>This can be useful for applying pre-packaged customizations.
 		 * @param builderConsumer the consumer to apply
@@ -315,16 +311,19 @@ public interface WebClient {
 		Builder apply(Consumer<Builder> builderConsumer);
 
 		/**
+		 * Clone this {@code WebClient.Builder}.
+		 */
+		Builder clone();
+
+		/**
 		 * Builder the {@link WebClient} instance.
 		 */
 		WebClient build();
-
 	}
 
 
 	/**
 	 * Contract for specifying the URI for a request.
-	 *
 	 * @param <S> a self reference to the spec type
 	 */
 	interface UriSpec<S extends RequestHeadersSpec<?>> {
@@ -358,7 +357,6 @@ public interface WebClient {
 
 	/**
 	 * Contract for specifying request headers leading up to the exchange.
-	 *
 	 * @param <S> a self reference to the spec type
 	 */
 	interface RequestHeadersSpec<S extends RequestHeadersSpec<S>> {
@@ -524,9 +522,9 @@ public interface WebClient {
 		 * {@linkplain BodyInserters#fromPublisher Publisher inserter}.
 		 * For example:
 		 * <p><pre>
-		 * Mono<Person> personMono = ... ;
+		 * Mono&lt;Person&gt; personMono = ... ;
 		 *
-		 * Mono<Void> result = client.post()
+		 * Mono&lt;Void&gt; result = client.post()
 		 *     .uri("/persons/{id}", id)
 		 *     .contentType(MediaType.APPLICATION_JSON)
 		 *     .body(personMono, Person.class)
@@ -582,6 +580,7 @@ public interface WebClient {
 		RequestHeadersSpec<?> syncBody(Object body);
 	}
 
+
 	/**
 	 * Contract for specifying response operations following the exchange.
 	 */
@@ -591,7 +590,7 @@ public interface WebClient {
 		 * Register a custom error function that gets invoked when the given {@link HttpStatus}
 		 * predicate applies. The exception returned from the function will be returned from
 		 * {@link #bodyToMono(Class)} and {@link #bodyToFlux(Class)}.
-		 * <p>By default, an error handler is register that throws a
+		 * <p>By default, an error handler is registered that throws a
 		 * {@link WebClientResponseException} when the response status code is 4xx or 5xx.
 		 * @param statusPredicate a predicate that indicates whether {@code exceptionFunction}
 		 * applies
@@ -602,6 +601,24 @@ public interface WebClient {
 		 * @return this builder
 		 */
 		ResponseSpec onStatus(Predicate<HttpStatus> statusPredicate,
+				Function<ClientResponse, Mono<? extends Throwable>> exceptionFunction);
+
+		/**
+		 * Register a custom error function that gets invoked when the given raw status code
+		 * predicate applies. The exception returned from the function will be returned from
+		 * {@link #bodyToMono(Class)} and {@link #bodyToFlux(Class)}.
+		 * <p>By default, an error handler is registered that throws a
+		 * {@link WebClientResponseException} when the response status code is 4xx or 5xx.
+		 * @param statusCodePredicate a predicate of the raw status code that indicates
+		 * whether {@code exceptionFunction} applies.
+		 * <p><strong>NOTE:</strong> if the response is expected to have content,
+		 * the exceptionFunction should consume it. If not, the content will be
+		 * automatically drained to ensure resources are released.
+		 * @param exceptionFunction the function that returns the exception
+		 * @return this builder
+		 * @since 5.1.9
+		 */
+		ResponseSpec onRawStatus(IntPredicate statusCodePredicate,
 				Function<ClientResponse, Mono<? extends Throwable>> exceptionFunction);
 
 		/**
@@ -647,24 +664,22 @@ public interface WebClient {
 		 * status code is 4xx or 5xx
 		 */
 		<T> Flux<T> bodyToFlux(ParameterizedTypeReference<T> typeReference);
-
 	}
 
 
 	/**
 	 * Contract for specifying request headers and URI for a request.
-	 *
 	 * @param <S> a self reference to the spec type
 	 */
 	interface RequestHeadersUriSpec<S extends RequestHeadersSpec<S>>
 			extends UriSpec<S>, RequestHeadersSpec<S> {
 	}
 
+
 	/**
 	 * Contract for specifying request headers, body and URI for a request.
 	 */
 	interface RequestBodyUriSpec extends RequestBodySpec, RequestHeadersUriSpec<RequestBodySpec> {
 	}
-
 
 }
