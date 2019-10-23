@@ -3,28 +3,34 @@ package org.springframework.calculate;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
 
 @Aspect
+@Component
 public class LogAspect {
 
 	@Pointcut("execution(* org.springframework.calculate.CalculateService.*(..))")
 	public void pointCut(){}
 
-	@Before(value = "pointCut()")
-	public void methodBefore(JoinPoint joinPoint){
-		String name = joinPoint.getSignature().getName();
-		System.out.println("目标执行方法【"+name+"】的 前置 通知");
+	@Before("pointCut()")
+	public void logStart(JoinPoint joinPoint){
+		Object[] args = joinPoint.getArgs();
+		System.out.println("出发开始,参数是："+ Arrays.asList(args));
+	}
+	@After("pointCut()")
+	public void logEnd(JoinPoint joinPoint){
+		System.out.println("出发结束");
 	}
 
-	@After(value = "pointCut()")
-	public void methodAfter(JoinPoint joinPoint){
-		String name = joinPoint.getSignature().getName();
-		System.out.println("目标执行方法【"+name+"】的 后置 通知");
+	@AfterReturning(value = "pointCut()" ,returning = "result")
+	public void logReturn(JoinPoint joinPoint,Object result){
+		System.out.println("返回正常，返回结果："+result);
 	}
 
-	@AfterReturning(value = "pointCut()",returning = "result")
-	public void methodAfter(JoinPoint joinPoint ,Object result){
-		String name = joinPoint.getSignature().getName();
-		System.out.println("目标执行方法【"+name+"】的 返回 通知");
+	@AfterThrowing(value = "pointCut()" ,throwing = "e")
+	public void logException(JoinPoint joinPoint,Exception e){
+		System.out.println("返回一场,一场信息="+e.getMessage());
 	}
 }

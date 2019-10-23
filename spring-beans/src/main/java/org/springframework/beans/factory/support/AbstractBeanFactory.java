@@ -245,6 +245,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// Eagerly check singleton cache for manually registered singletons.
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
+			//如果从缓存中已经拿到了对象（先不管是从哪个缓存中拿到的）
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
 					logger.trace("Returning eagerly cached instance of singleton bean '" + beanName +
@@ -254,9 +255,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
+			//用来处理一个bean实现了FactoryBean接口的情况，在这种情况下，会调用这个bean的getObject()函数，并返回其结果。
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
-
+		//如果缓存中还没有对象，就新建一个
 		else {
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.
@@ -265,6 +267,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 
 			// Check if bean definition exists in this factory.
+			//如果本BeanFactory中不包含beanName的定义，且有父BeanFactory,那么交给父BeanFactory去创建
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 				// Not found -> check parent.
@@ -291,10 +294,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 
 			try {
+				//下面两行代码从beanName得到对应的BeanDefinition并且转化成RootBeanDefinition类型，再并且如果有父bean的话需要和父bean的属性合并
 				final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 				checkMergedBeanDefinition(mbd, beanName, args);
 
 				// Guarantee initialization of beans that the current bean depends on.
+				//如果这个bean有dependsOn属性。切记，这个和我们今天要讲的循环依赖不是指同一个概念，
+				// 这个是bean定义的dependsOn属性，我们今天要讲的是属性相互依赖，
+				// 比如Car类包含了一个Person字段，Person类也包含了一个Car字段。
+				// 不过两种循环依赖的解决方案都差不多，都是先转去创建依赖的bean，再回来创建自己。
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
@@ -1153,7 +1161,12 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * <p>The default implementation delegates to {@link #registerCustomEditors}.
 	 * Can be overridden in subclasses.
 	 * @param bw the BeanWrapper to initialize
+	 *
 	 */
+	//	初始BeanWrapperImpl，设置ConversionService
+	//（可以查看每个类型是否可以转换成其他类型，并提供转换的方法）和注册
+	//	一些列的ResourceEditor到bw，比如
+	//	doRegisterEditor(registry, Resource.class, baseEditor);如果遇到Resource类型的使用baseEditor，进行编辑。
 	protected void initBeanWrapper(BeanWrapper bw) {
 		bw.setConversionService(getConversionService());
 		registerCustomEditors(bw);
@@ -1197,6 +1210,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 		}
+		//如果存在用户自定义的类型转换 也设置
 		if (!this.customEditors.isEmpty()) {
 			this.customEditors.forEach((requiredType, editorClass) ->
 					registry.registerCustomEditor(requiredType, BeanUtils.instantiateClass(editorClass)));
@@ -1716,11 +1730,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 */
 	protected void registerDisposableBeanIfNecessary(String beanName, Object bean, RootBeanDefinition mbd) {
 		AccessControlContext acc = (System.getSecurityManager() != null ? getAccessControlContext() : null);
+		//只有非原型且是DisposableBean，或者有destroy method  或者注册了 DestructionAwareBeanPostProcessors.
+		//最终在缓存中存放beanName和DisposableBean的映射关系，然后注册钩子的时候调用
 		if (!mbd.isPrototype() && requiresDestruction(bean, mbd)) {
+			//针对单例或者scope注册
 			if (mbd.isSingleton()) {
 				// Register a DisposableBean implementation that performs all destruction
 				// work for the given bean: DestructionAwareBeanPostProcessors,
 				// DisposableBean interface, custom destroy method.
+				// 最终在缓存中存放beanName和DisposableBean的映射关系，然后注册钩子的时候调用
 				registerDisposableBean(beanName,
 						new DisposableBeanAdapter(bean, beanName, mbd, getBeanPostProcessors(), acc));
 			}
@@ -1730,6 +1748,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				if (scope == null) {
 					throw new IllegalStateException("No Scope registered for scope name '" + mbd.getScope() + "'");
 				}
+				//注册了一个回调，根据scope的类型（比如是一个线程，一个request，servlet，事务）当这几种结束的时候回调这个DisposableBeanAdapter的destory方法
 				scope.registerDestructionCallback(beanName,
 						new DisposableBeanAdapter(bean, beanName, mbd, getBeanPostProcessors(), acc));
 			}

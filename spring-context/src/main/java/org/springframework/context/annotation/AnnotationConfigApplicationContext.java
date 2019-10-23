@@ -83,6 +83,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * e.g. {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
+		//调用父类 初始化一个读取器和扫描器  进行bean的扫描
 		this();
 		register(annotatedClasses);
 		refresh();

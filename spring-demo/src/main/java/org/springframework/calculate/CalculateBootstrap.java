@@ -8,6 +8,6 @@ public class CalculateBootstrap {
 
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(MainConfig.class);
 		CalculateService service = (CalculateService) applicationContext.getBean(CalculateService.class);
-		service.add(1,2);
+		service.add(5,3);
 	}
 }

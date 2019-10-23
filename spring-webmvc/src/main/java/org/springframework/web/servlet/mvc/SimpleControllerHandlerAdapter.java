@@ -41,14 +41,15 @@ public class SimpleControllerHandlerAdapter implements HandlerAdapter {
 
 	@Override
 	public boolean supports(Object handler) {
+		//判断是否是Controller类
 		return (handler instanceof Controller);
 	}
-
+	//执行Controller的handleRequest方法
 	@Override
 	@Nullable
 	public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
-
+		//本质是执行Controller的handleRequest方法
 		return ((Controller) handler).handleRequest(request, response);
 	}
 

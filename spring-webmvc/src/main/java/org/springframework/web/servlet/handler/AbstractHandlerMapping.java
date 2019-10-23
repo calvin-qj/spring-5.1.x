@@ -389,8 +389,8 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 
 
 	/**
-	 * Look up a handler for the given request, falling back to the default
-	 * handler if no specific one is found.
+	 * 查找给定请求的处理程序，如果没有找到特定的处理程序，则返回到默认处理程序
+	 * Look up a handler for the given request, falling back to the default handler if no specific one is found.
 	 * @param request current HTTP request
 	 * @return the corresponding handler instance, or the default handler
 	 * @see #getHandlerInternal
@@ -398,8 +398,10 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	@Override
 	@Nullable
 	public final HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+		//从实现类中获得处理方法 这里会两个子类重写这个方法：AbstractHandlerMethodMapping和AbstractUrlHandlerMapping
 		Object handler = getHandlerInternal(request);
 		if (handler == null) {
+			//如果没有找到的话，去默认的处理类
 			handler = getDefaultHandler();
 		}
 		if (handler == null) {
@@ -410,7 +412,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 			String handlerName = (String) handler;
 			handler = obtainApplicationContext().getBean(handlerName);
 		}
-
+		//获得处理程序执行链
 		HandlerExecutionChain executionChain = getHandlerExecutionChain(handler, request);
 
 		if (logger.isTraceEnabled()) {
@@ -450,6 +452,15 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	protected abstract Object getHandlerInternal(HttpServletRequest request) throws Exception;
 
 	/**
+	 * 为给定的处理程序(包括适用的拦截器)构建一个HandlerExecutionChain
+	 *
+	 * 默认实现使用给定的处理程序、处理程序映射的公共拦截器以及与当前请求URL匹配的任何内容构建标准。
+	 * 拦截器是按照注册的顺序添加的。子类可以覆盖它，以便扩展/重新排列拦截器列表。
+	 *
+	 * 传入的处理程序对象可以是原始处理程序，也可以是预构建的{@link HandlerExecutionChain}。
+	 * 这个方法应该显式地处理这两种情况，要么构建一个新的{@link HandlerExecutionChain}，要么扩展现有的链。
+	 *
+	 * 要简单地在自定义子类中添加拦截器，请考虑调用
 	 * Build a {@link HandlerExecutionChain} for the given handler, including
 	 * applicable interceptors.
 	 * <p>The default implementation builds a standard {@link HandlerExecutionChain}
@@ -457,7 +468,8 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	 * {@link MappedInterceptor MappedInterceptors} matching to the current request URL. Interceptors
 	 * are added in the order they were registered. Subclasses may override this
 	 * in order to extend/rearrange the list of interceptors.
-	 * <p><b>NOTE:</b> The passed-in handler object may be a raw handler or a
+	 * <p>
+	 *  <b>NOTE:</b> The passed-in handler object may be a raw handler or a
 	 * pre-built {@link HandlerExecutionChain}. This method should handle those
 	 * two cases explicitly, either building a new {@link HandlerExecutionChain}
 	 * or extending the existing chain.
@@ -469,14 +481,20 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	 * @return the HandlerExecutionChain (never {@code null})
 	 * @see #getAdaptedInterceptors()
 	 */
+	//处理器执行链=1个hanlder+N个Interceptor
 	protected HandlerExecutionChain getHandlerExecutionChain(Object handler, HttpServletRequest request) {
+		//如果没有获得则创建一个
 		HandlerExecutionChain chain = (handler instanceof HandlerExecutionChain ?
 				(HandlerExecutionChain) handler : new HandlerExecutionChain(handler));
-
+		//获得IP地址及端口后的URL地址
 		String lookupPath = this.urlPathHelper.getLookupPathForRequest(request);
+		//在HandlerExecutionChain中添加拦截器
+		// 遍历 SpringMVC 容器的所有拦截器
 		for (HandlerInterceptor interceptor : this.adaptedInterceptors) {
+			// 判断拦截器类型，属于 MappedInterceptor，则先匹配路径，否则直接添加
 			if (interceptor instanceof MappedInterceptor) {
 				MappedInterceptor mappedInterceptor = (MappedInterceptor) interceptor;
+				//根据lookupPath来获取Interceptor
 				if (mappedInterceptor.matches(lookupPath, this.pathMatcher)) {
 					chain.addInterceptor(mappedInterceptor.getInterceptor());
 				}
