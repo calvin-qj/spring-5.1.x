@@ -180,9 +180,18 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			}
 
 			Object retVal;
-
+			/**
+			 * 这个配置很重要 很实用【暴露我们的代理对象到线程变量中(ThreadLocal)】需要搭配@EnableAspectJAutoProxy(exposeProxy = true)一起使用
+			 * 比如exposeProxy = false的时候，我们的aop中，mod方法是被切入的方法，但是切入的方法中通过this来调用add方法的时候，那么该方法是不会被代理执行的，而是通过方法内部执行
+			 * public int mod(int a , int b){
+			 *     int result =((CalculateService)AopContext.currentProxy()).add(a,b);
+			 *     return a*b;
+			 * }
+			 * 事务方法调用的时候 需要这个实现
+			 */
 			if (this.advised.exposeProxy) {
 				// Make invocation available if necessary.
+				//把我们的代理暴露到线程变量中
 				oldProxy = AopContext.setCurrentProxy(proxy);
 				setProxyContext = true;
 			}
@@ -193,6 +202,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			Class<?> targetClass = (target != null ? target.getClass() : null);
 
 			// Get the interception chain for this method.
+			//把我们的AOP的advisor 转换为拦截器链
 			List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
 
 			// Check whether we have any advice. If we don't, we can fallback on direct
@@ -206,9 +216,11 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			}
 			else {
 				// We need to create a method invocation...
+				//创建一个方法调用对象
 				MethodInvocation invocation =
 						new ReflectiveMethodInvocation(proxy, target, method, args, targetClass, chain);
 				// Proceed to the joinpoint through the interceptor chain.
+				//执行切点的方法
 				retVal = invocation.proceed();
 			}
 

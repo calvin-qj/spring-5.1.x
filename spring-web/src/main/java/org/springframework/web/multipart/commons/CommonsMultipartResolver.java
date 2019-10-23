@@ -118,7 +118,8 @@ public class CommonsMultipartResolver extends CommonsFileUploadSupport
 		}
 	}
 
-
+	//我们看到了一个类是:ServletFileUpload，这个类就是大名鼎鼎的文件上传工具包：commons-fileupload中的类。
+	// SpringMVC对文件上传的处理是借助于commons-fileupload包来实现的
 	@Override
 	public boolean isMultipart(HttpServletRequest request) {
 		return ServletFileUpload.isMultipartContent(request);

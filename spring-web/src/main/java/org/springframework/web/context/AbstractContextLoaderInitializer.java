@@ -51,16 +51,31 @@ public abstract class AbstractContextLoaderInitializer implements WebApplication
 	}
 
 	/**
+	 * 注册我们的上下文监听容器
 	 * Register a {@link ContextLoaderListener} against the given servlet context. The
 	 * {@code ContextLoaderListener} is initialized with the application context returned
 	 * from the {@link #createRootApplicationContext()} template method.
 	 * @param servletContext the servlet context to register the listener against
 	 */
 	protected void registerContextLoaderListener(ServletContext servletContext) {
+		//创建我们的根的上下文容器WebApplicationContext(AnnotationConfigWebApplicationContext)
 		WebApplicationContext rootAppContext = createRootApplicationContext();
 		if (rootAppContext != null) {
+			/**
+			 * 相当于实现web.xml中的配置
+			 *    <listener>
+			 *         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+			 *     </listener>
+			 *
+			 *     <context-param>
+			 *         <param-name>contextConfigLocation</param-name>
+			 *         <param-value>/WEB-INF/app-context.xml</param-value>
+			 *     </context-param>
+			 */
+			//创建一个监听器ContextLoaderListener
 			ContextLoaderListener listener = new ContextLoaderListener(rootAppContext);
 			listener.setContextInitializers(getRootApplicationContextInitializers());
+			//把监听器注册到上下文中
 			servletContext.addListener(listener);
 		}
 		else {

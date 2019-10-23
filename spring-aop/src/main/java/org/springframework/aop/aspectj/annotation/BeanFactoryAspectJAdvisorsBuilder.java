@@ -81,14 +81,22 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 	 * @see #isEligibleBean
 	 */
 	public List<Advisor> buildAspectJAdvisors() {
+		//用于保存切面的名称 该地方aspectBeanNames 是我们的类级别的缓存 用户缓存已经解析出来的切面信息
 		List<String> aspectNames = this.aspectBeanNames;
-
+		//aspectNames 没有值 表示实例化第一个单实例bean的时候会触发解析切面操作
 		if (aspectNames == null) {
 			synchronized (this) {
 				aspectNames = this.aspectBeanNames;
 				if (aspectNames == null) {
+					//用于保存所有解析出来的Advisors集合对象
 					List<Advisor> advisors = new ArrayList<>();
+					//保存切面名称集合
 					aspectNames = new ArrayList<>();
+					/**
+					 * AOP功能在这里传入的是object对象 代表去容器中获取所有的组件名称 然后在经过--的进行遍历
+					 * 这个过程十分消耗性能，所以加入保存切面信息的缓存
+					 * 但是事务功能不一样，事务模块是直接获取Advisor类型 选择范围小，且不消耗性能
+					 */
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
 					for (String beanName : beanNames) {
@@ -101,10 +109,14 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 						if (beanType == null) {
 							continue;
 						}
+						//判断是否是Aspect 是否是切面类
 						if (this.advisorFactory.isAspect(beanType)) {
+							//是切面类 加入到缓存中
 							aspectNames.add(beanName);
+							//把beanName 和 class对象 构建成为一个AspectMetadata
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);
 							if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
+								//构建切面注解的实例工厂
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
