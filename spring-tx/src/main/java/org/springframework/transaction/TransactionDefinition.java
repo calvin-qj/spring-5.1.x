@@ -43,6 +43,7 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.transaction.support.DefaultTransactionDefinition
  * @see org.springframework.transaction.interceptor.TransactionAttribute
  */
+//事务定义信息 事务隔离级别 传播行为  超时 只读 回滚规则
 public interface TransactionDefinition {
 
 	/**

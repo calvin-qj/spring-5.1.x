@@ -71,19 +71,25 @@ import org.springframework.util.StringUtils;
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 
 	/** Cache of singleton objects: bean name to bean instance. */
+	//一级缓存 大名鼎鼎的单例缓存池 用于保存我们所有的单实例Bean
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
 	/** Cache of singleton factories: bean name to ObjectFactory.
 	 * spring不会直接创建bean，而是把创建bean的方法（createBean）封装成factory保存在singletonFactories里。*/
+	/** Cache of singleton factories: bean name to ObjectFactory. */
+	//三级缓存  单例对象工厂的cache  该map缓存key 为beanName value为ObjectFactory(包装为早期对象)
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
 	/** Cache of early singleton objects: bean name to bean instance. */
+	//二级缓存 提前暴光的单例对象的Cache  该map以后缓存key 为beanName value是我们的早期对象(对象属性还没有赋值)
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
 	/** Set of registered singletons, containing the bean names in registration order. */
 	private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
 	/** Names of beans that are currently in creation. */
+	//bean 处于创建中也就是说 bean 在初始化但是没有完成初始化，有一个这样的过程其实和 Spring 解决 bean 循环依赖的理念相辅相成，
+	// 因为 Spring 解决 singleton bean 的核心就在于提前曝光 bean。
 	private final Set<String> singletonsCurrentlyInCreation =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
@@ -128,14 +134,19 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/**
 	 * Add the given singleton object to the singleton cache of this factory.
 	 * <p>To be called for eager registration of singletons.
+	 * 把对象加入到单例缓存池中(所谓的一级缓存池  并且考虑循环依赖和正常情况下 移除二三级缓存)
 	 * @param beanName the name of the bean
 	 * @param singletonObject the singleton object
 	 */
 	protected void addSingleton(String beanName, Object singletonObject) {
 		synchronized (this.singletonObjects) {
+			//加入到单例缓存池中
 			this.singletonObjects.put(beanName, singletonObject);
+			//从三级缓存池中移除(针对不是处理循环依赖的)
 			this.singletonFactories.remove(beanName);
+			//从二级缓存池中移除(循环依赖的时候 早期对象存储与二级缓存池)
 			this.earlySingletonObjects.remove(beanName);
+			//用来记录保存已经处理的bean
 			this.registeredSingletons.add(beanName);
 		}
 	}
@@ -171,8 +182,16 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * reference to a currently created singleton (resolving a circular reference).
 	 * @param beanName the name of the bean to look for
 	 * @param allowEarlyReference whether early references should be created or not
+	 *     从字面意思上面理解就是允许提前拿到引用。
+	 *     其实真正的意思是是否允许从 singletonFactories 缓存中通过 getObject() 拿到对象，
+	 *     为什么会有这样一个字段呢？原因就在于 singletonFactories 才是 Spring 解决 singleton bean 的诀窍所在
 	 * @return the registered singleton object, or {@code null} if none found
 	 */
+	//首先从一级缓存 singletonObjects 获取，如果没有且当前指定的 beanName 正在创建，
+	// 就再从二级缓存中 earlySingletonObjects 获取，
+	// 如果还是没有获取到且运行 singletonFactories 通过 getObject() 获取，则从三级缓存 singletonFactories 获取，
+	// 如果获取到则，通过其 getObject() 获取对象，并将其加入到二级缓存 earlySingletonObjects 中
+	// 从三级缓存 singletonFactories 删除
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 		Object singletonObject = this.singletonObjects.get(beanName);
@@ -220,6 +239,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					this.suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
+					//调用getObject()方法创建对象！！真正创建对象的过程以及对循环依赖的递归处理就在这个函数中！！
+					// 所以当这个函数返回的时候，这个bean已经被创建完成，它所依赖的bean也已经被创建完成！！
 					//采用 委派模式
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
@@ -247,6 +268,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					afterSingletonCreation(beanName);
 				}
 				if (newSingleton) {
+					//此时才把bean加入singletonObjects字段中，所以singletonObjects字段中都是已经创建完成的bean
 					addSingleton(beanName, singletonObject);
 				}
 			}

@@ -559,10 +559,14 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 * @see #setContextConfigLocation
 	 */
 	protected WebApplicationContext initWebApplicationContext() {
+		//从我们的ServletContext对象中获取Spring root上下文对象
+		//因为我们在spring根容器创建成功的时候 放入到servletContext中
 		WebApplicationContext rootContext =
 				WebApplicationContextUtils.getWebApplicationContext(getServletContext());
 		WebApplicationContext wac = null;
-
+		/**
+		 * webApplicationContext上下文对象在创建DispatcherServlet对象的时候，就存进来一个Spring mvc的上下文对象
+		 */
 		if (this.webApplicationContext != null) {
 			// A context instance was injected at construction time -> use it
 			wac = this.webApplicationContext;
@@ -993,17 +997,20 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		Throwable failureCause = null;
 
 		LocaleContext previousLocaleContext = LocaleContextHolder.getLocaleContext();
+		//国际化
 		LocaleContext localeContext = buildLocaleContext(request);
 
 		RequestAttributes previousAttributes = RequestContextHolder.getRequestAttributes();
+		//构建ServletRequestAttributes对象
 		ServletRequestAttributes requestAttributes = buildRequestAttributes(request, response, previousAttributes);
 
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 		asyncManager.registerCallableInterceptor(FrameworkServlet.class.getName(), new RequestBindingInterceptor());
-
+		//初始化ContextHolders (即将Request对象放入到线程上下文中)
 		initContextHolders(request, localeContext, requestAttributes);
 
 		try {
+			//执行处理流程
 			doService(request, response);
 		}
 		catch (ServletException | IOException ex) {
@@ -1016,11 +1023,13 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		}
 
 		finally {
+			//重新设置ContextHolders
 			resetContextHolders(request, previousLocaleContext, previousAttributes);
 			if (requestAttributes != null) {
 				requestAttributes.requestCompleted();
 			}
 			logResult(request, response, failureCause, asyncManager);
+			//发布请求处理事件
 			publishRequestHandledEvent(request, response, startTime, failureCause);
 		}
 	}

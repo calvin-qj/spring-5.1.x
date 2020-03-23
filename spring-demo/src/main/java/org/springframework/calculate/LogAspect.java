@@ -4,29 +4,21 @@ package org.springframework.calculate;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
 
 @Aspect
+@Component
 public class LogAspect {
 
 	@Pointcut("execution(* org.springframework.calculate.CalculateService.*(..))")
 	public void pointCut(){}
 
-	@Before(value = "pointCut()")
-	public void methodBefore(JoinPoint joinPoint){
-		String name = joinPoint.getSignature().getName();
-		System.out.println("目标执行方法【"+name+"】的 前置 通知");
-	}
-
-
-	@Around(value = "pointCut()")
-	public void methodAround(JoinPoint joinPoint){
-		try {
-			String name = joinPoint.getSignature().getName();
-			((ProceedingJoinPoint) joinPoint).proceed();
-			System.out.println("目标执行方法【"+name+"】的 环绕 通知");
-		} catch (Throwable throwable) {
-			throwable.printStackTrace();
-		}
+	@Before("pointCut()")
+	public void logStart(JoinPoint joinPoint){
+		Object[] args = joinPoint.getArgs();
+		System.out.println("出发开始,参数是："+ Arrays.asList(args));
 	}
 
 	@After(value = "pointCut()")
@@ -35,8 +27,8 @@ public class LogAspect {
 		System.out.println("目标执行方法【"+name+"】的 后置 通知");
 	}
 
-	@AfterReturning(value = "pointCut()")
-	public void methodReturn(JoinPoint joinPoint ){
+	@AfterReturning(value = "pointCut()",returning = "result")
+	public void methodAfter(JoinPoint joinPoint ,Object result){
 		String name = joinPoint.getSignature().getName();
 		System.out.println("目标执行方法【"+name+"】的 返回 通知");
 	}

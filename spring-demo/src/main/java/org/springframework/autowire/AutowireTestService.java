@@ -1,0 +1,16 @@
+package org.springframework.autowire;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class AutowireTestService {
+
+	@Autowired
+	AutowireService autowireService;
+
+	public void doCalculate(){
+		int add = autowireService.add(1, 2);
+		System.out.println("------->"+add);
+	}
+}

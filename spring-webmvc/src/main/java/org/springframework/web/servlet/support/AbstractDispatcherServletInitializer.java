@@ -56,10 +56,16 @@ public abstract class AbstractDispatcherServletInitializer extends AbstractConte
 	 */
 	public static final String DEFAULT_SERVLET_NAME = "dispatcher";
 
-
+	/**
+	 *
+	 * @param servletContext 我们web应用文的上下文
+	 * @throws ServletException
+	 */
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException {
+		//实例化我们的spring root 上下文
 		super.onStartup(servletContext);
+		//注册我们的DispatcherServlet 创建我们的spring web 上下文对象
 		registerDispatcherServlet(servletContext);
 	}
 
@@ -73,14 +79,28 @@ public abstract class AbstractDispatcherServletInitializer extends AbstractConte
 	 * #customizeRegistration(ServletRegistration.Dynamic)} or
 	 * {@link #createDispatcherServlet(WebApplicationContext)}.
 	 * @param servletContext the context to register the servlet against
+	 *
 	 */
 	protected void registerDispatcherServlet(ServletContext servletContext) {
+		//获取DispatcherServlet的名称
 		String servletName = getServletName();
 		Assert.hasLength(servletName, "getServletName() must not return null or empty");
-
+		//创建WebApplicationContext对象
 		WebApplicationContext servletAppContext = createServletApplicationContext();
 		Assert.notNull(servletAppContext, "createServletApplicationContext() must not return null");
-
+		/**
+		 *创建我们的DispatcherServlet对象 所以tomcat会堆DispatcherServlet进行生命周期管理
+		 * 替换web.xml的下面的配置
+		 * <servlet>
+		 *         <servlet-name>app</servlet-name>
+		 *         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		 *         <init-param>
+		 *             <param-name>contextConfigLocation</param-name>
+		 *             <param-value></param-value>
+		 *         </init-param>
+		 *         <load-on-startup>1</load-on-startup>
+		 *     </servlet>
+		 */
 		FrameworkServlet dispatcherServlet = createDispatcherServlet(servletAppContext);
 		Assert.notNull(dispatcherServlet, "createDispatcherServlet(WebApplicationContext) must not return null");
 		dispatcherServlet.setContextInitializers(getServletApplicationContextInitializers());
