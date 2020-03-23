@@ -514,6 +514,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 
 	/**
+	 * 主要就是初始化IoC容器，最终会调用 refresh（）方
 	 * Overridden method of {@link HttpServletBean}, invoked after any bean properties
 	 * have been set. Creates this servlet's WebApplicationContext.
 	 */
@@ -526,6 +527,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		long startTime = System.currentTimeMillis();
 
 		try {
+			//初始化容器 并调用onRefresh()方法
 			this.webApplicationContext = initWebApplicationContext();
 			initFrameworkServlet();
 		}

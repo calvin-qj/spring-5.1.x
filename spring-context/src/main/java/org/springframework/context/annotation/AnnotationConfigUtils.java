@@ -39,6 +39,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
+ * 处理注解 Bean 定义类中的通用注解
  * Utility class that allows for convenient registration of common
  * {@link org.springframework.beans.factory.config.BeanPostProcessor} and
  * {@link org.springframework.beans.factory.config.BeanFactoryPostProcessor}
@@ -229,7 +230,7 @@ public abstract class AnnotationConfigUtils {
 			return null;
 		}
 	}
-
+	//在向容器注册 Bean 之前，首先对注解 Bean 定义类中的通用注解进行处理
 	public static void processCommonDefinitionAnnotations(AnnotatedBeanDefinition abd) {
 		processCommonDefinitionAnnotations(abd, abd.getMetadata());
 	}
@@ -245,10 +246,12 @@ public abstract class AnnotationConfigUtils {
 				abd.setLazyInit(lazy.getBoolean("value"));
 			}
 		}
-
+		//如果 Bean 定义中有@Primary 注解，则将该 Bean 设直为 autowiring 自动依赖注入装配的首选对
 		if (metadata.isAnnotated(Primary.class.getName())) {
 			abd.setPrimary(true);
 		}
+		//如果 Bean 定义中有@DependsOn注解，则为该 Bean 设置所依赖的 Bean 名称，
+		//容器将确保在实例化该 Bean 之前首先实例化所依赖的 Bean
 		AnnotationAttributes dependsOn = attributesFor(metadata, DependsOn.class);
 		if (dependsOn != null) {
 			abd.setDependsOn(dependsOn.getStringArray("value"));
@@ -263,7 +266,7 @@ public abstract class AnnotationConfigUtils {
 			abd.setDescription(description.getString("value"));
 		}
 	}
-
+	//根据注解 Bean 定义类中配置的作用域为其应用相应的代理策略
 	static BeanDefinitionHolder applyScopedProxyMode(
 			ScopeMetadata metadata, BeanDefinitionHolder definition, BeanDefinitionRegistry registry) {
 

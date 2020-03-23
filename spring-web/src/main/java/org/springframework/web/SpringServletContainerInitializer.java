@@ -112,7 +112,7 @@ import org.springframework.util.ReflectionUtils;
 public class SpringServletContainerInitializer implements ServletContainerInitializer {
 
 	/**
-	 * Delegate the {@code ServletContext} to any {@link WebApplicationInitializer}
+	 * Delegate《授(权); 把(工作、权力等)委托(给下级); 选派(某人做某事);》 the {@code ServletContext} to any {@link WebApplicationInitializer}
 	 * implementations present on the application classpath.
 	 * <p>Because this class declares @{@code HandlesTypes(WebApplicationInitializer.class)},
 	 * Servlet 3.0+ containers will automatically scan the classpath for implementations

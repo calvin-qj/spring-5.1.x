@@ -60,6 +60,7 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 	}
 
 	/**
+	 * 建立当前 ApplicationContext 中的所有 Controller 和 URL 的对应关系
 	 * Register all handlers found in the current ApplicationContext.
 	 * <p>The actual URL determination for a handler is up to the concrete
 	 * {@link #determineUrlsForHandler(String)} implementation. A bean for
@@ -69,15 +70,19 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 	 */
 	protected void detectHandlers() throws BeansException {
 		ApplicationContext applicationContext = obtainApplicationContext();
+		//获取 ApplicationContext 容器中所有 Bean 的名字
 		String[] beanNames = (this.detectHandlersInAncestorContexts ?
 				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(applicationContext, Object.class) :
 				applicationContext.getBeanNamesForType(Object.class));
 
-		// Take any bean name that we can determine URLs for.
+		// Take any bean name that we can determine URLs for. 遍历 beanNames,并找到这些 Bean 对应的 URL
 		for (String beanName : beanNames) {
+			//查找 Bean 上的所有 URL(Controller 上的 URL＋方法上的 URL ） ，该方法由对应的子类实现
 			String[] urls = determineUrlsForHandler(beanName);
 			if (!ObjectUtils.isEmpty(urls)) {
 				// URL paths found: Let's consider it a handler.
+				//保存 urls 和 beanName 的对应关系，放入 Map<urls,beanName>,
+				//该方法在父类AbstractUrlHandlerMapping中实现
 				registerHandler(urls, beanName);
 			}
 		}

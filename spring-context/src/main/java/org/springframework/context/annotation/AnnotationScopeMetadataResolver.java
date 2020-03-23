@@ -24,6 +24,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.util.Assert;
 
 /**
+ * 解析作用域元信息
  * A {@link ScopeMetadataResolver} implementation that by default checks for
  * the presence of Spring's {@link Scope @Scope} annotation on the bean class.
  *
@@ -79,17 +80,25 @@ public class AnnotationScopeMetadataResolver implements ScopeMetadataResolver {
 		ScopeMetadata metadata = new ScopeMetadata();
 		if (definition instanceof AnnotatedBeanDefinition) {
 			AnnotatedBeanDefinition annDef = (AnnotatedBeanDefinition) definition;
+			//从注解 Bean 定义类的属性中查找属性为 Scope 的值，即＠Scope 注解的值
+			//annDef.getMetadata()方法将 Bean 中所有的注解和注解的值存放在一个 map 集合中
 			AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(
 					annDef.getMetadata(), this.scopeAnnotationType);
+			//将获取 的@Scope 注解的值设置到要返回的对象中
 			if (attributes != null) {
 				metadata.setScopeName(attributes.getString("value"));
+				//获取@Scope 注解中的 proxyMode 属性值，在创建代理对象时会用到
 				ScopedProxyMode proxyMode = attributes.getEnum("proxyMode");
+				//如果@Scope 的 proxyMode 属性为 DEFAULT 或者 NO
 				if (proxyMode == ScopedProxyMode.DEFAULT) {
+					//设置 proxyMode 为 NO
 					proxyMode = this.defaultProxyMode;
 				}
+				//为返回的元数据设置 proxyMode
 				metadata.setScopedProxyMode(proxyMode);
 			}
 		}
+		//返回解析的作用域元信息对象
 		return metadata;
 	}
 

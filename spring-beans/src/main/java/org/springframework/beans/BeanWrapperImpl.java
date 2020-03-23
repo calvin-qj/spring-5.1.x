@@ -31,6 +31,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ * 负 责对容器中完成初始化 的 Bean 实例对象进行属 性的依赖注入，即 把
+ * Bean 对象设置到它所依赖的另 一个 Bean 的属性上
  * Default {@link BeanWrapper} implementation that should be sufficient
  * for all typical use cases. Caches introspection results for efficiency.
  *

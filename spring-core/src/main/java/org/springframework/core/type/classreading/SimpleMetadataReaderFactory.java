@@ -33,7 +33,8 @@ import org.springframework.util.ClassUtils;
  * @since 2.5
  */
 public class SimpleMetadataReaderFactory implements MetadataReaderFactory {
-
+	// ResourceLoader这个资源加载类应该不陌生了吧
+	// 默认使用的是DefaultResourceLoader，当然你可以通过构造器指定
 	private final ResourceLoader resourceLoader;
 
 
@@ -71,10 +72,16 @@ public class SimpleMetadataReaderFactory implements MetadataReaderFactory {
 		return this.resourceLoader;
 	}
 
-
+	/**
+	 * 根据类名找到一个Resource
+	 * @param className the class name (to be resolved to a ".class" file)
+	 * @return
+	 * @throws IOException
+	 */
 	@Override
 	public MetadataReader getMetadataReader(String className) throws IOException {
 		try {
+			// 把..形式换成//.class形式。使用前缀是：classpath:  在类路径里找哦
 			String resourcePath = ResourceLoader.CLASSPATH_URL_PREFIX +
 					ClassUtils.convertClassNameToResourcePath(className) + ClassUtils.CLASS_FILE_SUFFIX;
 			Resource resource = this.resourceLoader.getResource(resourcePath);
@@ -98,6 +105,7 @@ public class SimpleMetadataReaderFactory implements MetadataReaderFactory {
 		}
 	}
 
+	//默认使用的是SimpleMetadataReader
 	@Override
 	public MetadataReader getMetadataReader(Resource resource) throws IOException {
 		return new SimpleMetadataReader(resource, this.resourceLoader.getClassLoader());

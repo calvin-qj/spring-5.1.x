@@ -707,7 +707,7 @@ public abstract class AnnotationUtils {
 		return findAnnotation(clazz, annotationType, true);
 	}
 
-	/**
+	/**使用递归 逐层往上查询 是否包含注解 比如@SpringBootApplication 查找@Component 就可以查询到
 	 * Perform the actual work for {@link #findAnnotation(AnnotatedElement, Class)},
 	 * honoring the {@code synthesize} flag.
 	 * @param clazz the class to look for annotations on

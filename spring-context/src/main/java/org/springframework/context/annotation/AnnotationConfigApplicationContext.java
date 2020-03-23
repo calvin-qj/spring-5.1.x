@@ -51,9 +51,10 @@ import org.springframework.util.Assert;
  * @see org.springframework.context.support.GenericXmlApplicationContext
  */
 public class AnnotationConfigApplicationContext extends GenericApplicationContext implements AnnotationConfigRegistry {
-
+	//保存一个读取注解的 Bean 定义读取器，并将其设置到容器中
 	private final AnnotatedBeanDefinitionReader reader;
 
+	//保存一个扫描指定类路径中注解 Bean 定义的扫描器 ， 并将其设置到容器中
 	private final ClassPathBeanDefinitionScanner scanner;
 
 
@@ -61,6 +62,8 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * Create a new AnnotationConfigApplicationContext that needs to be populated
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
+	//默认构造函数，初始化一个空容器，容器不包含任何 Bean 信息，需要稍后通过调用其register（）
+	//方法注册配置类，并调用 refresh() 方法刷新容器，触发容器对注解 Bean 的载入、解析和注册
 	public AnnotationConfigApplicationContext() {
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
@@ -128,6 +131,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	}
 
 	/**
+	 * 为容器的注解 Bean 读取器和注解 Bean 扫描器设置作用范围元信息解析器
 	 * Set the {@link ScopeMetadataResolver} to use for detected bean classes.
 	 * <p>The default is an {@link AnnotationScopeMetadataResolver}.
 	 * <p>Any call to this method must occur prior to calls to {@link #register(Class...)}
@@ -144,6 +148,8 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	//---------------------------------------------------------------------
 
 	/**
+	 * 为容器注册一个要被处理的注解 Bean ，新注册的 Bean ，必须手动调用容器 的
+	 * refresh()  方法刷新容器，触发容器对新注册的 Bean 的处理
 	 * Register one or more annotated classes to be processed.
 	 * <p>Note that {@link #refresh()} must be called in order for the context
 	 * to fully process the new classes.
@@ -158,6 +164,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	}
 
 	/**
+	 * 扫描指定包路径及其子包下的注解类，为了使新添加的类被处理，必须手动调用refresh（） 方法刷新容器
 	 * Perform a scan within the specified base packages.
 	 * <p>Note that {@link #refresh()} must be called in order for the context
 	 * to fully process the new classes.

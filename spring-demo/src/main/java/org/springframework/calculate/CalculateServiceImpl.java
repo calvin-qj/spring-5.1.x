@@ -1,8 +1,7 @@
 package org.springframework.calculate;
 
-import org.springframework.stereotype.Component;
 
-@Component
+
 public class CalculateServiceImpl implements CalculateService {
 
 	@Override

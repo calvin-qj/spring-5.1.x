@@ -7,7 +7,7 @@ public class CalculateBootstrap {
 	public static void main(String[] args) {
 
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(MainConfig.class);
-		CalculateService service = (CalculateService) applicationContext.getBean(CalculateService.class);
+		CalculateService service = (CalculateService) applicationContext.getBean("calculateService");
 		service.add(1,2);
 	}
 }

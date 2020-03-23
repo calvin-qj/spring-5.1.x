@@ -31,7 +31,7 @@ import org.springframework.util.StringUtils;
  * @since 2.5
  */
 public class StandardClassMetadata implements ClassMetadata {
-
+	//就一个构造函数，传进来的Class，作为内部的内省对象
 	private final Class<?> introspectedClass;
 
 
